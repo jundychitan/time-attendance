@@ -1,0 +1,280 @@
+{
+  "info": {
+    "name": "Daily Time Record API",
+    "description": "REST API for the Daily Time Record (DTR) mobile application.\n\nAuthentication: All protected endpoints require a Bearer token obtained from the Auth > Issue Token endpoint.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Issue Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\",\n  \"device_name\": \"postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "token"]
+            },
+            "description": "Authenticate and receive a Bearer token. Use the returned token for all subsequent requests."
+          }
+        },
+        {
+          "name": "Revoke Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "token"]
+            },
+            "description": "Revoke the current API token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "List Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees?search=&per_page=15&active_only=false",
+              "host": ["{{base_url}}"],
+              "path": ["employees"],
+              "query": [
+                { "key": "search", "value": "", "description": "Search by name or ID number" },
+                { "key": "per_page", "value": "15", "description": "Results per page" },
+                { "key": "active_only", "value": "false", "description": "Filter active employees only" }
+              ]
+            },
+            "description": "Get a paginated list of employees. Supports search and active-only filtering."
+          }
+        },
+        {
+          "name": "Create Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_number\": \"EMP-004\",\n  \"first_name\": \"Anna\",\n  \"last_name\": \"Garcia\",\n  \"department\": \"Marketing\",\n  \"position\": \"Designer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/employees",
+              "host": ["{{base_url}}"],
+              "path": ["employees"]
+            },
+            "description": "Create a new employee record."
+          }
+        },
+        {
+          "name": "Show Employee",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/1",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "1"]
+            },
+            "description": "Get a single employee by ID."
+          }
+        },
+        {
+          "name": "Update Employee",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Updated Name\",\n  \"department\": \"Operations\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/employees/1",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "1"]
+            },
+            "description": "Update an existing employee. Only include fields you want to change."
+          }
+        },
+        {
+          "name": "Deactivate Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/1",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "1"]
+            },
+            "description": "Deactivate an employee (soft-delete). Sets is_active to false."
+          }
+        },
+        {
+          "name": "Employee Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employees/1/attendance?start_date=2026-02-01&end_date=2026-02-28",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "1", "attendance"],
+              "query": [
+                { "key": "start_date", "value": "2026-02-01", "description": "Start date (required)" },
+                { "key": "end_date", "value": "2026-02-28", "description": "End date (required)" }
+              ]
+            },
+            "description": "Get daily attendance records for a specific employee within a date range."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkins",
+      "item": [
+        {
+          "name": "Create Checkin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "id_number", "value": "EMP-001", "type": "text", "description": "Employee ID number" },
+                { "key": "latitude", "value": "14.5547", "type": "text", "description": "GPS latitude" },
+                { "key": "longitude", "value": "121.0244", "type": "text", "description": "GPS longitude" },
+                { "key": "location_name", "value": "Manila Office", "type": "text", "description": "Human-readable location (optional)" },
+                { "key": "selfie", "type": "file", "description": "Selfie photo (required, max 5MB)" },
+                { "key": "captured_at", "value": "2026-03-08 08:00:00", "type": "text", "description": "Device-reported datetime" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/checkins",
+              "host": ["{{base_url}}"],
+              "path": ["checkins"]
+            },
+            "description": "Submit a new check-in from the mobile app. Requires multipart/form-data with a selfie image."
+          }
+        },
+        {
+          "name": "List Checkins",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/checkins?date=2026-02-10&employee_id=&id_number=&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["checkins"],
+              "query": [
+                { "key": "date", "value": "2026-02-10", "description": "Filter by specific date" },
+                { "key": "employee_id", "value": "", "description": "Filter by employee ID" },
+                { "key": "id_number", "value": "", "description": "Filter by employee ID number" },
+                { "key": "per_page", "value": "15", "description": "Results per page" }
+              ]
+            },
+            "description": "List check-ins with optional filtering by date, employee, or ID number."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Daily Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attendance?date=2026-02-10&employee_id=",
+              "host": ["{{base_url}}"],
+              "path": ["attendance"],
+              "query": [
+                { "key": "date", "value": "2026-02-10", "description": "Date to query (defaults to today)" },
+                { "key": "employee_id", "value": "", "description": "Filter to specific employee" }
+              ]
+            },
+            "description": "Get daily attendance summary for all active employees on a specific date."
+          }
+        },
+        {
+          "name": "Attendance Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attendance/summary?date=",
+              "host": ["{{base_url}}"],
+              "path": ["attendance", "summary"],
+              "query": [
+                { "key": "date", "value": "", "description": "Date for summary (defaults to today)" }
+              ]
+            },
+            "description": "Get aggregated attendance stats: total employees, present/absent counts, average hours, and recent check-ins."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-vue-next';
+import {
+    BookOpen,
+    CalendarCheck,
+    FolderGit2,
+    LayoutGrid,
+    Users,
+} from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -22,6 +28,16 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Employees',
+        href: '/employees',
+        icon: Users,
+    },
+    {
+        title: 'Attendance',
+        href: '/attendance',
+        icon: CalendarCheck,
     },
 ];
 

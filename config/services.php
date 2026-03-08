@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'checkin' => [
+        'api_key' => env('CHECKIN_API_KEY'),
+    ],
+
 ];

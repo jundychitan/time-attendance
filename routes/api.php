@@ -21,14 +21,19 @@ Route::prefix('v1')->group(function () {
     // Auth (public)
     Route::post('auth/token', [AuthController::class, 'store']);
 
-    // Protected routes
+    // Mobile app checkin endpoint (API key auth)
+    Route::middleware('api.key')->group(function () {
+        Route::post('checkins', [CheckinController::class, 'store']);
+    });
+
+    // Protected routes (Sanctum token auth)
     Route::middleware('auth:sanctum')->group(function () {
         Route::delete('auth/token', [AuthController::class, 'destroy']);
 
         Route::apiResource('employees', EmployeeController::class);
         Route::get('employees/{employee}/attendance', [EmployeeController::class, 'attendance']);
 
-        Route::apiResource('checkins', CheckinController::class)->only(['index', 'store']);
+        Route::get('checkins', [CheckinController::class, 'index']);
 
         Route::get('attendance', [AttendanceController::class, 'index']);
         Route::get('attendance/summary', [AttendanceController::class, 'summary']);

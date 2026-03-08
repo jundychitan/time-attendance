@@ -21,8 +21,8 @@ Route::prefix('v1')->group(function () {
     // Auth (public)
     Route::post('auth/token', [AuthController::class, 'store']);
 
-    // Mobile app checkin endpoint (API key auth)
-    Route::middleware('api.key')->group(function () {
+    // Mobile app checkin endpoint (API key auth + logging)
+    Route::middleware(['api.log', 'api.key'])->group(function () {
         Route::post('checkins', [CheckinController::class, 'store']);
     });
 

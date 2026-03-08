@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import {
     BookOpen,
+    Bug,
     CalendarCheck,
     FolderGit2,
     LayoutGrid,
@@ -38,6 +39,11 @@ const mainNavItems: NavItem[] = [
         title: 'Attendance',
         href: '/attendance',
         icon: CalendarCheck,
+    },
+    {
+        title: 'API Debug Logs',
+        href: '/api-logs',
+        icon: Bug,
     },
 ];
 

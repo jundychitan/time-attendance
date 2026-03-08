@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApiLogController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
 
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+
+    Route::get('api-logs', [ApiLogController::class, 'index'])->name('api-logs.index');
 });
 
 require __DIR__.'/settings.php';

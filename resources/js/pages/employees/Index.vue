@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Users } from 'lucide-vue-next';
+import { Users, Plus } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,11 +76,19 @@ watch(search, (value) => {
                         <Users class="h-5 w-5" />
                         <CardTitle>Employees</CardTitle>
                     </div>
-                    <Input
-                        v-model="search"
-                        placeholder="Search by name or ID..."
-                        class="max-w-sm"
-                    />
+                    <div class="flex items-center gap-2">
+                        <Input
+                            v-model="search"
+                            placeholder="Search by name or ID..."
+                            class="max-w-sm"
+                        />
+                        <Button as-child>
+                            <Link href="/employees/create">
+                                <Plus class="mr-1 h-4 w-4" />
+                                Add
+                            </Link>
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>

@@ -27,6 +27,8 @@ type AttendanceRecord = {
     time_in: string | null;
     time_out: string | null;
     total_hours: number | null;
+    selfie_in_url: string | null;
+    selfie_out_url: string | null;
 };
 
 type Props = {
@@ -101,10 +103,32 @@ function onDateChange(event: Event) {
                                     {{ record.employee.department ?? '—' }}
                                 </TableCell>
                                 <TableCell>
-                                    {{ record.time_in ?? '—' }}
+                                    <template v-if="record.time_in">
+                                        <a
+                                            v-if="record.selfie_in_url"
+                                            :href="record.selfie_in_url"
+                                            target="_blank"
+                                            class="text-primary hover:underline"
+                                        >
+                                            {{ record.time_in }}
+                                        </a>
+                                        <span v-else>{{ record.time_in }}</span>
+                                    </template>
+                                    <span v-else>—</span>
                                 </TableCell>
                                 <TableCell>
-                                    {{ record.time_out ?? '—' }}
+                                    <template v-if="record.time_out">
+                                        <a
+                                            v-if="record.selfie_out_url"
+                                            :href="record.selfie_out_url"
+                                            target="_blank"
+                                            class="text-primary hover:underline"
+                                        >
+                                            {{ record.time_out }}
+                                        </a>
+                                        <span v-else>{{ record.time_out }}</span>
+                                    </template>
+                                    <span v-else>—</span>
                                 </TableCell>
                                 <TableCell class="text-right">
                                     {{

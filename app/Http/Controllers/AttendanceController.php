@@ -19,6 +19,14 @@ class AttendanceController extends Controller
         $attendance = $employees->map(function (Employee $employee) use ($date) {
             $record = $employee->attendanceForDate($date);
 
+            $checkins = $employee->checkins()
+                ->whereDate('captured_at', $date)
+                ->orderBy('captured_at')
+                ->get();
+
+            $selfieIn = $checkins->first();
+            $selfieOut = $checkins->count() > 1 ? $checkins->last() : null;
+
             return [
                 'employee' => [
                     'id' => $employee->id,
@@ -27,6 +35,8 @@ class AttendanceController extends Controller
                     'department' => $employee->department,
                 ],
                 ...$record,
+                'selfie_in_url' => $selfieIn ? asset('storage/'.$selfieIn->selfie_path) : null,
+                'selfie_out_url' => $selfieOut ? asset('storage/'.$selfieOut->selfie_path) : null,
             ];
         });
 

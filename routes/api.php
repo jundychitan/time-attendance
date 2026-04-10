@@ -21,9 +21,10 @@ Route::prefix('v1')->group(function () {
     // Auth (public)
     Route::post('auth/token', [AuthController::class, 'store']);
 
-    // Mobile app checkin endpoint (API key auth + logging)
+    // Mobile app endpoints (API key auth + logging)
     Route::middleware(['api.log', 'api.key'])->group(function () {
         Route::post('checkins', [CheckinController::class, 'store']);
+        Route::get('employees/lookup', [EmployeeController::class, 'lookup']);
     });
 
     // Protected routes (Sanctum token auth)

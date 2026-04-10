@@ -68,6 +68,26 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Lookup an employee by id_number.
+     */
+    public function lookup(Request $request): JsonResponse
+    {
+        $request->validate([
+            'id_number' => ['required', 'string'],
+        ]);
+
+        $employee = Employee::query()
+            ->where('id_number', $request->input('id_number'))
+            ->first(['id_number', 'first_name', 'last_name', 'department']);
+
+        if (! $employee) {
+            return response()->json(['message' => 'Employee not found.'], 404);
+        }
+
+        return response()->json(['data' => $employee]);
+    }
+
+    /**
      * Get attendance records for a specific employee.
      */
     public function attendance(Request $request, Employee $employee): JsonResponse

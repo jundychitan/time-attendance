@@ -10,6 +10,7 @@ use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Storage;
 
 class CheckinController extends Controller
 {
@@ -40,7 +41,7 @@ class CheckinController extends Controller
     {
         $employee = Employee::query()->where('id_number', $request->input('id_number'))->firstOrFail();
 
-        $selfiePath = $request->file('selfie')->store('selfies', 'public');
+        $selfiePath = $request->file('selfie')->store('selfies', 's3');
 
         $checkin = Checkin::query()->create([
             'employee_id' => $employee->id,

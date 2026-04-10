@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,8 +36,8 @@ class AttendanceController extends Controller
                     'department' => $employee->department,
                 ],
                 ...$record,
-                'selfie_in_url' => $selfieIn ? asset('storage/'.$selfieIn->selfie_path) : null,
-                'selfie_out_url' => $selfieOut ? asset('storage/'.$selfieOut->selfie_path) : null,
+                'selfie_in_url' => $selfieIn ? Storage::disk('s3')->url($selfieIn->selfie_path) : null,
+                'selfie_out_url' => $selfieOut ? Storage::disk('s3')->url($selfieOut->selfie_path) : null,
             ];
         });
 

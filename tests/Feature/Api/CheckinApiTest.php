@@ -11,7 +11,7 @@ use Laravel\Sanctum\Sanctum;
 const TEST_API_KEY = 'test-checkin-api-key';
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('s3');
     Config::set('services.checkin.api_key', TEST_API_KEY);
 });
 
@@ -35,7 +35,7 @@ it('creates a checkin with selfie upload', function () {
         'location_name' => 'Manila Office',
     ]);
 
-    Storage::disk('public')->assertExists(
+    Storage::disk('s3')->assertExists(
         Checkin::query()->first()->selfie_path
     );
 });

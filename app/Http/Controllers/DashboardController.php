@@ -50,9 +50,10 @@ class DashboardController extends Controller
 
         $avgHours = $employeesWithHours > 0 ? round($totalHours / $employeesWithHours, 2) : 0;
 
-        // Recent checkins
+        // Recent checkins (company-scoped)
         $recentCheckins = Checkin::query()
             ->with('employee')
+            ->whereIn('employee_id', $employeeIds)
             ->orderByDesc('captured_at')
             ->limit(10)
             ->get()

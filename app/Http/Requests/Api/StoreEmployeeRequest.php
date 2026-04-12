@@ -20,6 +20,8 @@ class StoreEmployeeRequest extends FormRequest
             'id_number' => ['required', 'string', 'max:255', 'unique:employees,id_number'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'company' => ['nullable', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
             'position' => ['nullable', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],

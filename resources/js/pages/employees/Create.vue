@@ -20,6 +20,8 @@ const form = useForm({
     id_number: '',
     first_name: '',
     last_name: '',
+    email: '',
+    company: '',
     department: '',
     position: '',
     is_active: true,
@@ -77,6 +79,32 @@ function submit() {
                                 />
                                 <p v-if="form.errors.last_name" class="text-destructive text-sm">
                                     {{ form.errors.last_name }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div class="space-y-2">
+                                <Label for="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    v-model="form.email"
+                                    type="email"
+                                    placeholder="juan@example.com"
+                                />
+                                <p v-if="form.errors.email" class="text-destructive text-sm">
+                                    {{ form.errors.email }}
+                                </p>
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="company">Company</Label>
+                                <Input
+                                    id="company"
+                                    v-model="form.company"
+                                    placeholder="Acme Corp"
+                                />
+                                <p v-if="form.errors.company" class="text-destructive text-sm">
+                                    {{ form.errors.company }}
                                 </p>
                             </div>
                         </div>

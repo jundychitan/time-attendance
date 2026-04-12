@@ -78,7 +78,7 @@ class EmployeeController extends Controller
 
         $employee = Employee::query()
             ->where('id_number', $request->input('id_number'))
-            ->first(['id_number', 'first_name', 'last_name', 'department']);
+            ->first(['id_number', 'first_name', 'last_name', 'email', 'company', 'department']);
 
         if (! $employee) {
             return response()->json(['message' => 'Employee not found.'], 404);

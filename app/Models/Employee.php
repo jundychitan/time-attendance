@@ -28,6 +28,8 @@ class Employee extends Model
         'id_number',
         'first_name',
         'last_name',
+        'email',
+        'company',
         'department',
         'position',
         'is_active',

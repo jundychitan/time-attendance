@@ -23,6 +23,8 @@ type Props = {
         id_number: string;
         first_name: string;
         last_name: string;
+        email: string | null;
+        company: string | null;
         department: string | null;
         position: string | null;
         is_active: boolean;
@@ -127,13 +129,29 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <dl class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <dl class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                         <div>
                             <dt class="text-muted-foreground text-sm">
                                 ID Number
                             </dt>
                             <dd class="font-medium">
                                 {{ props.employee.id_number }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-foreground text-sm">
+                                Email
+                            </dt>
+                            <dd class="font-medium">
+                                {{ props.employee.email ?? '—' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-foreground text-sm">
+                                Company
+                            </dt>
+                            <dd class="font-medium">
+                                {{ props.employee.company ?? '—' }}
                             </dd>
                         </div>
                         <div>

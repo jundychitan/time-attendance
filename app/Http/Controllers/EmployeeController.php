@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Support\CutoffPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -82,9 +83,10 @@ class EmployeeController extends Controller
     {
         $employee->loadCount('checkins');
 
+        $period = CutoffPeriod::current();
         $attendance = $employee->attendanceForRange(
-            now()->startOfMonth(),
-            now(),
+            $period->start,
+            $period->end,
         );
 
         $recentCheckins = $employee->checkins()

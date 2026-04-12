@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Pencil, Trash2 } from 'lucide-vue-next';
+import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -43,6 +46,12 @@ type Props = {
 
 const props = defineProps<Props>();
 
+const showDeleteConfirm = ref(false);
+
+function deleteEmployee() {
+    router.delete(`/employees/${props.employee.id}`);
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },
     { title: 'Employees', href: '/employees' },
@@ -68,19 +77,53 @@ const breadcrumbs: BreadcrumbItem[] = [
                             {{ props.employee.first_name }}
                             {{ props.employee.last_name }}
                         </CardTitle>
-                        <Badge
-                            :variant="
-                                props.employee.is_active
-                                    ? 'default'
-                                    : 'secondary'
-                            "
-                        >
-                            {{
-                                props.employee.is_active
-                                    ? 'Active'
-                                    : 'Inactive'
-                            }}
-                        </Badge>
+                        <div class="flex items-center gap-2">
+                            <Badge
+                                :variant="
+                                    props.employee.is_active
+                                        ? 'default'
+                                        : 'secondary'
+                                "
+                            >
+                                {{
+                                    props.employee.is_active
+                                        ? 'Active'
+                                        : 'Inactive'
+                                }}
+                            </Badge>
+                            <Button size="sm" variant="outline" as-child>
+                                <Link :href="`/employees/${props.employee.id}/edit`">
+                                    <Pencil class="mr-1 h-3.5 w-3.5" />
+                                    Edit
+                                </Link>
+                            </Button>
+                            <Button
+                                v-if="!showDeleteConfirm"
+                                size="sm"
+                                variant="destructive"
+                                @click="showDeleteConfirm = true"
+                            >
+                                <Trash2 class="mr-1 h-3.5 w-3.5" />
+                                Delete
+                            </Button>
+                            <template v-else>
+                                <span class="text-destructive text-sm">Are you sure?</span>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    @click="deleteEmployee"
+                                >
+                                    Yes, delete
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    @click="showDeleteConfirm = false"
+                                >
+                                    Cancel
+                                </Button>
+                            </template>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>

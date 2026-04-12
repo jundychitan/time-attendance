@@ -46,6 +46,38 @@ class EmployeeController extends Controller
         ]);
     }
 
+    public function edit(Employee $employee): Response
+    {
+        return Inertia::render('employees/Edit', [
+            'employee' => $employee,
+        ]);
+    }
+
+    public function update(Request $request, Employee $employee): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_number' => ['required', 'string', 'max:255', 'unique:employees,id_number,'.$employee->id],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'max:255'],
+            'position' => ['nullable', 'string', 'max:255'],
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
+
+        $employee->update($validated);
+
+        return redirect("/employees/{$employee->id}")
+            ->with('success', 'Employee updated successfully.');
+    }
+
+    public function destroy(Employee $employee): RedirectResponse
+    {
+        $employee->delete();
+
+        return redirect('/employees')
+            ->with('success', 'Employee deleted successfully.');
+    }
+
     public function show(Employee $employee): Response
     {
         $employee->loadCount('checkins');

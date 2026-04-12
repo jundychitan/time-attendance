@@ -5,6 +5,7 @@ use App\Http\Controllers\ApiLogController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeePortalController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -13,6 +14,18 @@ Route::inertia('/', 'Welcome', [
 ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Role-based home redirect
+    Route::get('home', function () {
+        return auth()->user()->isEmployee()
+            ? redirect('/my-attendance')
+            : redirect('/dashboard');
+    })->name('home.redirect');
+
+    // Employee self-service (accessible by all authenticated users)
+    Route::get('my-attendance', [EmployeePortalController::class, 'index'])->name('my-attendance');
+
+    // Admin routes (restricted from employee-role users)
+    Route::middleware('admin')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
@@ -29,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('attendance/checkins/{checkin}/reject', [AttendanceController::class, 'rejectManualTimeOut'])->name('attendance.reject');
 
     Route::get('api-logs', [ApiLogController::class, 'index'])->name('api-logs.index');
+    }); // end admin middleware
 
     Route::middleware('super.admin')->group(function () {
         Route::get('admin-users', [AdminUserController::class, 'index'])->name('admin-users.index');

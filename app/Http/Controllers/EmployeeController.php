@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\User;
 use App\Support\CutoffPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,6 +32,8 @@ class EmployeeController extends Controller
         ]);
 
         $employee = Employee::query()->create($validated);
+
+        $this->syncEmployeeUser($employee);
 
         return redirect("/employees/{$employee->id}")
             ->with('success', 'Employee created successfully.');
@@ -78,6 +82,8 @@ class EmployeeController extends Controller
 
         $employee->update($validated);
 
+        $this->syncEmployeeUser($employee);
+
         return redirect("/employees/{$employee->id}")
             ->with('success', 'Employee updated successfully.');
     }
@@ -88,6 +94,41 @@ class EmployeeController extends Controller
 
         return redirect('/employees')
             ->with('success', 'Employee deleted successfully.');
+    }
+
+    /**
+     * Create or update the linked user account for an employee.
+     */
+    private function syncEmployeeUser(Employee $employee): void
+    {
+        $username = $employee->email
+            ?: strtolower(str_replace(' ', '', $employee->first_name).'.'.str_replace(' ', '', $employee->last_name));
+
+        $user = User::query()->where('employee_id', $employee->id)->first();
+
+        if ($user) {
+            $user->update([
+                'name' => $employee->full_name,
+                'email' => $username,
+                'company' => $employee->company,
+            ]);
+        } else {
+            $defaultPassword = strtolower(
+                str_replace(' ', '', $employee->first_name)
+                .str_replace(' ', '', $employee->last_name)
+                .'1234'
+            );
+
+            User::query()->create([
+                'name' => $employee->full_name,
+                'email' => $username,
+                'password' => Hash::make($defaultPassword),
+                'email_verified_at' => now(),
+                'role' => 'employee',
+                'employee_id' => $employee->id,
+                'company' => $employee->company,
+            ]);
+        }
     }
 
     public function show(Employee $employee): Response

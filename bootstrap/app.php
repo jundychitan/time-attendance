@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'api.key' => \App\Http\Middleware\ValidateApiKey::class,
             'api.log' => \App\Http\Middleware\LogApiRequest::class,
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'super.admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
     })

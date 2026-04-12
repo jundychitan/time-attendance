@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\User;
 
 class Checkin extends Model
 {
@@ -18,6 +19,8 @@ class Checkin extends Model
         'selfie_path',
         'captured_at',
         'manual_time_out',
+        'manual_time_out_status',
+        'approved_by',
     ];
 
     /**
@@ -31,6 +34,14 @@ class Checkin extends Model
             'captured_at' => 'datetime',
             'manual_time_out' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**

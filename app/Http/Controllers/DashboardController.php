@@ -14,17 +14,26 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
 
-        $totalEmployees = Employee::query()->active()->count();
+        $employeeQuery = Employee::query()->active();
+
+        // Company scope
+        if (auth()->user()->company) {
+            $employeeQuery->where('company', auth()->user()->company);
+        }
+
+        $totalEmployees = (clone $employeeQuery)->count();
+        $employeeIds = (clone $employeeQuery)->pluck('id');
 
         $presentToday = Checkin::query()
             ->whereDate('captured_at', $today)
+            ->whereIn('employee_id', $employeeIds)
             ->distinct('employee_id')
             ->count('employee_id');
 
         $absentToday = $totalEmployees - $presentToday;
 
         // Average hours worked today
-        $employees = Employee::query()->active()
+        $employees = (clone $employeeQuery)
             ->whereHas('checkins', fn ($q) => $q->whereDate('captured_at', $today))
             ->get();
 
@@ -63,6 +72,7 @@ class DashboardController extends Controller
         while ($current->lte($today)) {
             $presentCount = Checkin::query()
                 ->whereDate('captured_at', $current)
+                ->whereIn('employee_id', $employeeIds)
                 ->distinct('employee_id')
                 ->count('employee_id');
 

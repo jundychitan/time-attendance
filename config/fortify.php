@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration(), // Disabled — only super admins can create admin users
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

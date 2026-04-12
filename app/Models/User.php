@@ -21,8 +21,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'company',
         'email',
         'password',
+        'is_super_admin',
     ];
 
     /**
@@ -47,7 +49,20 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_super_admin' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Scope to filter employees by the admin's company.
+     */
+    public function scopeCompanyEmployees($query)
+    {
+        if ($this->company) {
+            return Employee::query()->where('company', $this->company);
+        }
+
+        return Employee::query();
     }
 }

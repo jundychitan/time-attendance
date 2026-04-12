@@ -20,7 +20,14 @@ class AttendanceController extends Controller
             ? CutoffPeriod::forDate($request->input('period_start'))
             : CutoffPeriod::current();
 
-        $employees = Employee::query()->active()->orderBy('last_name')->get();
+        $query = Employee::query()->active();
+
+        // Company scope
+        if (auth()->user()->company) {
+            $query->where('company', auth()->user()->company);
+        }
+
+        $employees = $query->orderBy('last_name')->get();
 
         $attendance = $employees->map(function (Employee $employee) use ($period) {
             $records = $employee->attendanceForRange($period->start, $period->end);
@@ -54,8 +61,32 @@ class AttendanceController extends Controller
             'manual_time_out' => ['required', 'date'],
         ]);
 
-        $checkin->update($validated);
+        $checkin->update([
+            ...$validated,
+            'manual_time_out_status' => 'pending',
+            'approved_by' => null,
+        ]);
 
-        return back()->with('success', 'Manual time-out saved.');
+        return back()->with('success', 'Manual time-out submitted for approval.');
+    }
+
+    public function approveManualTimeOut(Checkin $checkin): RedirectResponse
+    {
+        $checkin->update([
+            'manual_time_out_status' => 'approved',
+            'approved_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Manual time-out approved.');
+    }
+
+    public function rejectManualTimeOut(Checkin $checkin): RedirectResponse
+    {
+        $checkin->update([
+            'manual_time_out_status' => 'rejected',
+            'approved_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Manual time-out rejected.');
     }
 }

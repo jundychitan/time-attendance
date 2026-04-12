@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\ApiLogController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
@@ -24,8 +25,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::patch('attendance/checkins/{checkin}/manual-time-out', [AttendanceController::class, 'updateManualTimeOut'])->name('attendance.manual-time-out');
+    Route::patch('attendance/checkins/{checkin}/approve', [AttendanceController::class, 'approveManualTimeOut'])->name('attendance.approve');
+    Route::patch('attendance/checkins/{checkin}/reject', [AttendanceController::class, 'rejectManualTimeOut'])->name('attendance.reject');
 
     Route::get('api-logs', [ApiLogController::class, 'index'])->name('api-logs.index');
+
+    Route::middleware('super.admin')->group(function () {
+        Route::get('admin-users', [AdminUserController::class, 'index'])->name('admin-users.index');
+        Route::get('admin-users/create', [AdminUserController::class, 'create'])->name('admin-users.create');
+        Route::post('admin-users', [AdminUserController::class, 'store'])->name('admin-users.store');
+        Route::get('admin-users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin-users.edit');
+        Route::put('admin-users/{user}', [AdminUserController::class, 'update'])->name('admin-users.update');
+        Route::delete('admin-users/{user}', [AdminUserController::class, 'destroy'])->name('admin-users.destroy');
+    });
 });
 
 require __DIR__.'/settings.php';

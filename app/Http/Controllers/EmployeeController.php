@@ -36,7 +36,14 @@ class EmployeeController extends Controller
     }
     public function index(Request $request): Response
     {
-        $employees = Employee::query()
+        $query = Employee::query();
+
+        // Company scope: admins only see their company's employees
+        if ($request->user()->company) {
+            $query->where('company', $request->user()->company);
+        }
+
+        $employees = $query
             ->search($request->input('search'))
             ->withCount('checkins')
             ->orderBy('last_name')

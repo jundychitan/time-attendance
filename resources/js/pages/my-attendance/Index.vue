@@ -92,7 +92,7 @@ function submitManualTimeOut(checkinId: number, date: string) {
             <!-- Employee Info -->
             <Card>
                 <CardContent class="pt-6">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h2 class="text-lg font-semibold">{{ props.employee.full_name }}</h2>
                             <p class="text-muted-foreground text-sm">
@@ -117,16 +117,16 @@ function submitManualTimeOut(checkinId: number, date: string) {
 
             <!-- Attendance Records -->
             <Card>
-                <CardHeader class="flex flex-row items-center justify-between">
+                <CardHeader class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex items-center gap-2">
                         <CalendarCheck class="h-5 w-5" />
                         <CardTitle>Attendance</CardTitle>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center gap-2">
                         <Button size="sm" variant="outline" @click="goToPeriod(props.previousPeriod.start)">
                             <ChevronLeft class="h-4 w-4" />
                         </Button>
-                        <span class="min-w-[220px] text-center text-sm font-medium">
+                        <span class="text-center text-sm font-medium">
                             {{ props.period.label }}
                         </span>
                         <Button size="sm" variant="outline" @click="goToPeriod(props.nextPeriod.start)">
@@ -134,7 +134,7 @@ function submitManualTimeOut(checkinId: number, date: string) {
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent class="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>

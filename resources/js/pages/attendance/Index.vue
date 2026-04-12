@@ -116,14 +116,14 @@ function toggleEmployee(id: number) {
         <div class="flex h-full flex-1 flex-col gap-6 p-4">
             <Card>
                 <CardHeader
-                    class="flex flex-row items-center justify-between"
+                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div class="flex items-center gap-2">
                         <CalendarCheck class="h-5 w-5" />
                         <CardTitle>Attendance</CardTitle>
                     </div>
                     <!-- Period Navigator -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center gap-2">
                         <Button
                             size="sm"
                             variant="outline"
@@ -131,7 +131,7 @@ function toggleEmployee(id: number) {
                         >
                             <ChevronLeft class="h-4 w-4" />
                         </Button>
-                        <span class="min-w-[220px] text-center text-sm font-medium">
+                        <span class="text-center text-sm font-medium">
                             {{ props.period.label }}
                         </span>
                         <Button
@@ -143,7 +143,7 @@ function toggleEmployee(id: number) {
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent class="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>

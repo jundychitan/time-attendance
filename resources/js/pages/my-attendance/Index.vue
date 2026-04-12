@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { CalendarCheck, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { CalendarCheck, ChevronLeft, ChevronRight, Clock } from 'lucide-vue-next';
+import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -16,6 +18,7 @@ type DailyRecord = {
     time_out: string | null;
     time_out_next_day: boolean;
     total_hours: number | null;
+    checkin_id: number | null;
     manual_time_out: string | null;
     manual_time_out_status: string | null;
 };
@@ -53,6 +56,31 @@ function goToPeriod(periodStart: string) {
         { period_start: periodStart },
         { preserveState: true },
     );
+}
+
+const editingCheckinId = ref<number | null>(null);
+const manualTimeOutInput = ref('');
+
+function startEdit(checkinId: number) {
+    editingCheckinId.value = checkinId;
+    manualTimeOutInput.value = '';
+}
+
+function cancelEdit() {
+    editingCheckinId.value = null;
+    manualTimeOutInput.value = '';
+}
+
+function submitManualTimeOut(checkinId: number, date: string) {
+    const form = useForm({
+        manual_time_out: `${date} ${manualTimeOutInput.value}`,
+    });
+    form.patch(`/attendance/checkins/${checkinId}/manual-time-out`, {
+        onSuccess: () => {
+            editingCheckinId.value = null;
+            manualTimeOutInput.value = '';
+        },
+    });
 }
 </script>
 
@@ -127,10 +155,47 @@ function goToPeriod(periodStart: string) {
                                         <Badge v-if="record.time_out_next_day" variant="outline" class="ml-1 text-xs">+1d</Badge>
                                         <Badge v-if="record.manual_time_out_status === 'approved'" variant="outline" class="ml-1 text-xs">manual</Badge>
                                     </template>
-                                    <template v-else-if="record.manual_time_out && record.manual_time_out_status">
-                                        <span class="text-muted-foreground">{{ record.manual_time_out }}</span>
-                                        <Badge v-if="record.manual_time_out_status === 'pending'" variant="outline" class="ml-1 text-xs text-yellow-600">pending</Badge>
-                                        <Badge v-else-if="record.manual_time_out_status === 'rejected'" variant="destructive" class="ml-1 text-xs">rejected</Badge>
+                                    <template v-else-if="record.time_in && !record.time_out">
+                                        <!-- Edit form -->
+                                        <div v-if="editingCheckinId === record.checkin_id" class="flex items-center gap-1">
+                                            <Input
+                                                v-model="manualTimeOutInput"
+                                                type="time"
+                                                step="1"
+                                                class="h-7 w-28 text-xs"
+                                            />
+                                            <Button
+                                                size="sm"
+                                                class="h-7 px-2 text-xs"
+                                                :disabled="!manualTimeOutInput"
+                                                @click="submitManualTimeOut(record.checkin_id!, record.date)"
+                                            >
+                                                Save
+                                            </Button>
+                                            <Button size="sm" variant="ghost" class="h-7 px-2 text-xs" @click="cancelEdit">
+                                                ✕
+                                            </Button>
+                                        </div>
+                                        <!-- Pending/rejected with edit -->
+                                        <div v-else-if="record.manual_time_out && record.manual_time_out_status" class="flex items-center gap-1">
+                                            <span class="text-muted-foreground">{{ record.manual_time_out }}</span>
+                                            <Badge v-if="record.manual_time_out_status === 'pending'" variant="outline" class="text-xs text-yellow-600">pending</Badge>
+                                            <Badge v-else-if="record.manual_time_out_status === 'rejected'" variant="destructive" class="text-xs">rejected</Badge>
+                                            <Button size="sm" variant="ghost" class="h-6 px-1.5 text-xs" @click="startEdit(record.checkin_id!)">
+                                                edit
+                                            </Button>
+                                        </div>
+                                        <!-- Set time-out button -->
+                                        <Button
+                                            v-else
+                                            size="sm"
+                                            variant="outline"
+                                            class="h-7 px-2 text-xs"
+                                            @click="startEdit(record.checkin_id!)"
+                                        >
+                                            <Clock class="mr-1 h-3 w-3" />
+                                            Set time-out
+                                        </Button>
                                     </template>
                                     <span v-else>—</span>
                                 </TableCell>

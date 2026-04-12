@@ -24,6 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Employee self-service (accessible by all authenticated users)
     Route::get('my-attendance', [EmployeePortalController::class, 'index'])->name('my-attendance');
 
+    // Shared route: employees and admins can set manual time-out
+    Route::patch('attendance/checkins/{checkin}/manual-time-out', [AttendanceController::class, 'updateManualTimeOut'])->name('attendance.manual-time-out');
+
     // Admin routes (restricted from employee-role users)
     Route::middleware('admin')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
@@ -37,7 +40,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
 
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::patch('attendance/checkins/{checkin}/manual-time-out', [AttendanceController::class, 'updateManualTimeOut'])->name('attendance.manual-time-out');
     Route::patch('attendance/checkins/{checkin}/approve', [AttendanceController::class, 'approveManualTimeOut'])->name('attendance.approve');
     Route::patch('attendance/checkins/{checkin}/reject', [AttendanceController::class, 'rejectManualTimeOut'])->name('attendance.reject');
 

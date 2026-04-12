@@ -35,6 +35,7 @@ Route::prefix('v1')->group(function () {
         Route::get('employees/{employee}/attendance', [EmployeeController::class, 'attendance']);
 
         Route::get('checkins', [CheckinController::class, 'index']);
+        Route::patch('checkins/{checkin}', [CheckinController::class, 'update']);
 
         Route::get('attendance', [AttendanceController::class, 'index']);
         Route::get('attendance/summary', [AttendanceController::class, 'summary']);

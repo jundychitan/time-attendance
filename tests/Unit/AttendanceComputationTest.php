@@ -107,3 +107,103 @@ it('handles multiple checkins in a day using first and last', function () {
         ->and($attendance['time_out'])->toBe('18:00:00')
         ->and($attendance['total_hours'])->toBe(10.0);
 });
+
+it('pairs overnight shift checkin with next morning checkout', function () {
+    $employee = Employee::factory()->create();
+
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => '2026-02-10 20:00:00',
+    ]);
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => '2026-02-11 06:00:00',
+    ]);
+
+    $attendance = $employee->attendanceForDate('2026-02-10');
+
+    expect($attendance['time_in'])->toBe('20:00:00')
+        ->and($attendance['time_out'])->toBe('06:00:00')
+        ->and($attendance['time_out_next_day'])->toBeTrue()
+        ->and($attendance['total_hours'])->toBe(10.0);
+});
+
+it('returns null time_out for overnight shift with no next-day checkout', function () {
+    $employee = Employee::factory()->create();
+
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => '2026-02-10 22:00:00',
+    ]);
+
+    $attendance = $employee->attendanceForDate('2026-02-10');
+
+    expect($attendance['time_in'])->toBe('22:00:00')
+        ->and($attendance['time_out'])->toBeNull()
+        ->and($attendance['total_hours'])->toBeNull();
+});
+
+it('applies 16-hour rule to discard invalid time-out', function () {
+    $employee = Employee::factory()->create();
+    $date = '2026-02-10';
+
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => "{$date} 06:00:00",
+    ]);
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => "{$date} 22:00:00",
+    ]);
+
+    $attendance = $employee->attendanceForDate($date);
+
+    // 16 hours gap -> last checkin is NOT a valid time-out
+    expect($attendance['time_in'])->toBe('06:00:00')
+        ->and($attendance['time_out'])->toBeNull()
+        ->and($attendance['total_hours'])->toBeNull();
+});
+
+it('does not double-count consumed overnight checkout in range', function () {
+    $employee = Employee::factory()->create();
+
+    // Night shift: checkin at 20:00 day 1, checkout at 06:00 day 2
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => '2026-02-10 20:00:00',
+    ]);
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => '2026-02-11 06:00:00',
+    ]);
+
+    $attendance = $employee->attendanceForRange('2026-02-10', '2026-02-11');
+
+    // Day 1: overnight shift paired
+    expect($attendance[0]['time_in'])->toBe('20:00:00')
+        ->and($attendance[0]['time_out'])->toBe('06:00:00')
+        ->and($attendance[0]['time_out_next_day'])->toBeTrue()
+        ->and($attendance[0]['total_hours'])->toBe(10.0);
+
+    // Day 2: consumed checkout should NOT appear as time-in
+    expect($attendance[1]['time_in'])->toBeNull()
+        ->and($attendance[1]['time_out'])->toBeNull();
+});
+
+it('uses manual_time_out when auto time-out is null', function () {
+    $employee = Employee::factory()->create();
+    $date = '2026-02-10';
+
+    Checkin::factory()->create([
+        'employee_id' => $employee->id,
+        'captured_at' => "{$date} 20:00:00",
+        'manual_time_out' => "{$date} 23:30:00",
+    ]);
+
+    $attendance = $employee->attendanceForDate($date);
+
+    expect($attendance['time_in'])->toBe('20:00:00')
+        ->and($attendance['time_out'])->toBe('23:30:00')
+        ->and($attendance['manual_time_out'])->toBe('23:30:00')
+        ->and($attendance['total_hours'])->toBe(3.5);
+});

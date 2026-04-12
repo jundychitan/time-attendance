@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Checkin;
 use App\Models\Employee;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -20,13 +22,28 @@ class AttendanceController extends Controller
         $attendance = $employees->map(function (Employee $employee) use ($date) {
             $record = $employee->attendanceForDate($date);
 
-            $checkins = $employee->checkins()
-                ->whereDate('captured_at', $date)
-                ->orderBy('captured_at')
-                ->get();
+            // Get selfies based on actual checkins used
+            $selfieInUrl = null;
+            $selfieOutUrl = null;
 
-            $selfieIn = $checkins->first();
-            $selfieOut = $checkins->count() > 1 ? $checkins->last() : null;
+            if ($record['checkin_id']) {
+                $firstCheckin = Checkin::find($record['checkin_id']);
+                if ($firstCheckin) {
+                    $selfieInUrl = Storage::disk('s3')->url($firstCheckin->selfie_path);
+                }
+            }
+
+            // Find the time-out checkin for selfie
+            if ($record['time_out'] && ! $record['manual_time_out']) {
+                $checkins = $employee->checkins()
+                    ->whereDate('captured_at', $record['time_out_next_day'] ? $date->copy()->addDay() : $date)
+                    ->orderByDesc('captured_at')
+                    ->first();
+
+                if ($checkins) {
+                    $selfieOutUrl = Storage::disk('s3')->url($checkins->selfie_path);
+                }
+            }
 
             return [
                 'employee' => [
@@ -36,8 +53,8 @@ class AttendanceController extends Controller
                     'department' => $employee->department,
                 ],
                 ...$record,
-                'selfie_in_url' => $selfieIn ? Storage::disk('s3')->url($selfieIn->selfie_path) : null,
-                'selfie_out_url' => $selfieOut ? Storage::disk('s3')->url($selfieOut->selfie_path) : null,
+                'selfie_in_url' => $selfieInUrl,
+                'selfie_out_url' => $selfieOutUrl,
             ];
         });
 
@@ -45,5 +62,16 @@ class AttendanceController extends Controller
             'attendance' => $attendance,
             'date' => $date->toDateString(),
         ]);
+    }
+
+    public function updateManualTimeOut(Request $request, Checkin $checkin): RedirectResponse
+    {
+        $validated = $request->validate([
+            'manual_time_out' => ['required', 'date'],
+        ]);
+
+        $checkin->update($validated);
+
+        return back()->with('success', 'Manual time-out saved.');
     }
 }

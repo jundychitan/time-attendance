@@ -17,6 +17,7 @@ class Checkin extends Model
         'location_name',
         'selfie_path',
         'captured_at',
+        'manual_time_out',
     ];
 
     /**
@@ -28,6 +29,7 @@ class Checkin extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'captured_at' => 'datetime',
+            'manual_time_out' => 'datetime',
         ];
     }
 

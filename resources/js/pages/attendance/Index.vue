@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { CalendarCheck } from 'lucide-vue-next';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { CalendarCheck, Clock } from 'lucide-vue-next';
+import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -26,7 +28,10 @@ type AttendanceRecord = {
     date: string;
     time_in: string | null;
     time_out: string | null;
+    time_out_next_day: boolean;
     total_hours: number | null;
+    checkin_id: number | null;
+    manual_time_out: string | null;
     selfie_in_url: string | null;
     selfie_out_url: string | null;
 };
@@ -50,6 +55,31 @@ function onDateChange(event: Event) {
         { date: target.value },
         { preserveState: true },
     );
+}
+
+const editingCheckinId = ref<number | null>(null);
+const manualTimeOutInput = ref('');
+
+function startEditManualTimeOut(checkinId: number) {
+    editingCheckinId.value = checkinId;
+    manualTimeOutInput.value = '';
+}
+
+function cancelEdit() {
+    editingCheckinId.value = null;
+    manualTimeOutInput.value = '';
+}
+
+function submitManualTimeOut(checkinId: number, date: string) {
+    const form = useForm({
+        manual_time_out: `${date} ${manualTimeOutInput.value}`,
+    });
+    form.patch(`/attendance/checkins/${checkinId}/manual-time-out`, {
+        onSuccess: () => {
+            editingCheckinId.value = null;
+            manualTimeOutInput.value = '';
+        },
+    });
 }
 </script>
 
@@ -127,6 +157,49 @@ function onDateChange(event: Event) {
                                             {{ record.time_out }}
                                         </a>
                                         <span v-else>{{ record.time_out }}</span>
+                                        <Badge v-if="record.time_out_next_day" variant="outline" class="ml-1 text-xs">
+                                            +1d
+                                        </Badge>
+                                        <Badge v-if="record.manual_time_out" variant="outline" class="ml-1 text-xs">
+                                            manual
+                                        </Badge>
+                                    </template>
+                                    <template v-else-if="record.time_in && !record.time_out">
+                                        <!-- Missing time-out: show manual entry -->
+                                        <div v-if="editingCheckinId === record.checkin_id" class="flex items-center gap-1">
+                                            <Input
+                                                v-model="manualTimeOutInput"
+                                                type="time"
+                                                step="1"
+                                                class="h-7 w-28 text-xs"
+                                            />
+                                            <Button
+                                                size="sm"
+                                                class="h-7 px-2 text-xs"
+                                                :disabled="!manualTimeOutInput"
+                                                @click="submitManualTimeOut(record.checkin_id!, record.date)"
+                                            >
+                                                Save
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                class="h-7 px-2 text-xs"
+                                                @click="cancelEdit"
+                                            >
+                                                ✕
+                                            </Button>
+                                        </div>
+                                        <Button
+                                            v-else
+                                            size="sm"
+                                            variant="outline"
+                                            class="h-7 px-2 text-xs"
+                                            @click="startEditManualTimeOut(record.checkin_id!)"
+                                        >
+                                            <Clock class="mr-1 h-3 w-3" />
+                                            Set time-out
+                                        </Button>
                                     </template>
                                     <span v-else>—</span>
                                 </TableCell>

@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
 
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::patch('attendance/checkins/{checkin}/manual-time-out', [AttendanceController::class, 'updateManualTimeOut'])->name('attendance.manual-time-out');
 
     Route::get('api-logs', [ApiLogController::class, 'index'])->name('api-logs.index');
 });

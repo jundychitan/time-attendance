@@ -35,6 +35,22 @@ class CheckinController extends Controller
     }
 
     /**
+     * Update a checkin's manual time-out.
+     */
+    public function update(Request $request, Checkin $checkin): JsonResponse
+    {
+        $validated = $request->validate([
+            'manual_time_out' => ['required', 'date'],
+        ]);
+
+        $checkin->update($validated);
+        $checkin->load('employee');
+
+        return (new CheckinResource($checkin))
+            ->response();
+    }
+
+    /**
      * Store a new checkin from the mobile app.
      */
     public function store(StoreCheckinRequest $request): JsonResponse

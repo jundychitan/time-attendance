@@ -27,9 +27,23 @@ import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 const page = usePage();
-const isSuperAdmin = computed(() => (page.props.auth as any)?.user?.is_super_admin);
+const user = computed(() => (page.props.auth as any)?.user);
+const isSuperAdmin = computed(() => user.value?.is_super_admin);
+const isEmployee = computed(() => user.value?.role === 'employee');
 
 const mainNavItems = computed<NavItem[]>(() => {
+    // Employee role: only My Attendance
+    if (isEmployee.value) {
+        return [
+            {
+                title: 'My Attendance',
+                href: '/my-attendance',
+                icon: CalendarCheck,
+            },
+        ];
+    }
+
+    // Admin role
     const items: NavItem[] = [
         {
             title: 'Dashboard',

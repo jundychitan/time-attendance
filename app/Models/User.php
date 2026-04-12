@@ -25,6 +25,8 @@ class User extends Authenticatable
         'email',
         'password',
         'is_super_admin',
+        'role',
+        'employee_id',
     ];
 
     /**
@@ -55,14 +57,20 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope to filter employees by the admin's company.
+     * The employee record linked to this user (for employee-role users).
      */
-    public function scopeCompanyEmployees($query)
+    public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        if ($this->company) {
-            return Employee::query()->where('company', $this->company);
-        }
+        return $this->belongsTo(Employee::class);
+    }
 
-        return Employee::query();
+    public function isEmployee(): bool
+    {
+        return $this->role === 'employee';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }

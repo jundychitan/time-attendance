@@ -46,19 +46,21 @@ const mainNavItems = computed<NavItem[]>(() => {
             href: '/attendance',
             icon: CalendarCheck,
         },
-        {
-            title: 'API Debug Logs',
-            href: '/api-logs',
-            icon: Bug,
-        },
     ];
 
     if (isSuperAdmin.value) {
-        items.push({
-            title: 'Admin Users',
-            href: '/admin-users',
-            icon: ShieldCheck,
-        });
+        items.push(
+            {
+                title: 'Admin Users',
+                href: '/admin-users',
+                icon: ShieldCheck,
+            },
+            {
+                title: 'API Debug Logs',
+                href: '/api-logs',
+                icon: Bug,
+            },
+        );
     }
 
     return items;

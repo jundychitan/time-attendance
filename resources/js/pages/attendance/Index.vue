@@ -214,7 +214,26 @@ function toggleEmployee(id: number) {
                                                             </Badge>
                                                         </template>
                                                         <template v-else-if="record.time_in && !record.time_out">
-                                                            <div v-if="editingCheckinId === record.checkin_id" class="flex items-center gap-1">
+                                                            <!-- Show pending/rejected manual time-out value -->
+                                                            <div v-if="record.manual_time_out && record.manual_time_out_status" class="flex items-center gap-1">
+                                                                <span class="text-muted-foreground">{{ record.manual_time_out }}</span>
+                                                                <Badge v-if="record.manual_time_out_status === 'pending'" variant="outline" class="text-xs text-yellow-600">
+                                                                    pending
+                                                                </Badge>
+                                                                <Badge v-else-if="record.manual_time_out_status === 'rejected'" variant="destructive" class="text-xs">
+                                                                    rejected
+                                                                </Badge>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    class="h-6 px-1.5 text-xs"
+                                                                    @click.stop="startEditManualTimeOut(record.checkin_id!)"
+                                                                >
+                                                                    edit
+                                                                </Button>
+                                                            </div>
+                                                            <!-- Edit or set new manual time-out -->
+                                                            <div v-else-if="editingCheckinId === record.checkin_id" class="flex items-center gap-1">
                                                                 <Input
                                                                     v-model="manualTimeOutInput"
                                                                     type="time"

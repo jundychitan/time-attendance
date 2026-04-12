@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Checkin;
 use App\Models\Employee;
+use App\Support\CutoffPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,35 +16,16 @@ class AttendanceController extends Controller
 {
     public function index(Request $request): Response
     {
-        $date = Carbon::parse($request->input('date', now()->toDateString()));
+        $period = $request->filled('period_start')
+            ? CutoffPeriod::forDate($request->input('period_start'))
+            : CutoffPeriod::current();
 
         $employees = Employee::query()->active()->orderBy('last_name')->get();
 
-        $attendance = $employees->map(function (Employee $employee) use ($date) {
-            $record = $employee->attendanceForDate($date);
+        $attendance = $employees->map(function (Employee $employee) use ($period) {
+            $records = $employee->attendanceForRange($period->start, $period->end);
 
-            // Get selfies based on actual checkins used
-            $selfieInUrl = null;
-            $selfieOutUrl = null;
-
-            if ($record['checkin_id']) {
-                $firstCheckin = Checkin::find($record['checkin_id']);
-                if ($firstCheckin) {
-                    $selfieInUrl = Storage::disk('s3')->url($firstCheckin->selfie_path);
-                }
-            }
-
-            // Find the time-out checkin for selfie
-            if ($record['time_out'] && ! $record['manual_time_out']) {
-                $checkins = $employee->checkins()
-                    ->whereDate('captured_at', $record['time_out_next_day'] ? $date->copy()->addDay() : $date)
-                    ->orderByDesc('captured_at')
-                    ->first();
-
-                if ($checkins) {
-                    $selfieOutUrl = Storage::disk('s3')->url($checkins->selfie_path);
-                }
-            }
+            $totalHours = collect($records)->sum('total_hours');
 
             return [
                 'employee' => [
@@ -52,15 +34,17 @@ class AttendanceController extends Controller
                     'full_name' => $employee->full_name,
                     'department' => $employee->department,
                 ],
-                ...$record,
-                'selfie_in_url' => $selfieInUrl,
-                'selfie_out_url' => $selfieOutUrl,
+                'records' => $records,
+                'total_hours' => round($totalHours, 2),
+                'days_present' => collect($records)->whereNotNull('time_in')->count(),
             ];
         });
 
         return Inertia::render('attendance/Index', [
             'attendance' => $attendance,
-            'date' => $date->toDateString(),
+            'period' => $period->toArray(),
+            'previousPeriod' => $period->previous()->toArray(),
+            'nextPeriod' => $period->next()->toArray(),
         ]);
     }
 

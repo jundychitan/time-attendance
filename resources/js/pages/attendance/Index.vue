@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { CalendarCheck, Clock } from 'lucide-vue-next';
+import { CalendarCheck, ChevronLeft, ChevronRight, Clock } from 'lucide-vue-next';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,13 +18,7 @@ import {
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
-type AttendanceRecord = {
-    employee: {
-        id: number;
-        id_number: string;
-        full_name: string;
-        department: string | null;
-    };
+type DailyRecord = {
     date: string;
     time_in: string | null;
     time_out: string | null;
@@ -32,13 +26,31 @@ type AttendanceRecord = {
     total_hours: number | null;
     checkin_id: number | null;
     manual_time_out: string | null;
-    selfie_in_url: string | null;
-    selfie_out_url: string | null;
+};
+
+type EmployeeAttendance = {
+    employee: {
+        id: number;
+        id_number: string;
+        full_name: string;
+        department: string | null;
+    };
+    records: DailyRecord[];
+    total_hours: number;
+    days_present: number;
+};
+
+type Period = {
+    start: string;
+    end: string;
+    label: string;
 };
 
 type Props = {
-    attendance: AttendanceRecord[];
-    date: string;
+    attendance: EmployeeAttendance[];
+    period: Period;
+    previousPeriod: Period;
+    nextPeriod: Period;
 };
 
 const props = defineProps<Props>();
@@ -48,11 +60,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Attendance', href: '/attendance' },
 ];
 
-function onDateChange(event: Event) {
-    const target = event.target as HTMLInputElement;
+function goToPeriod(periodStart: string) {
     router.get(
         '/attendance',
-        { date: target.value },
+        { period_start: periodStart },
         { preserveState: true },
     );
 }
@@ -81,6 +92,12 @@ function submitManualTimeOut(checkinId: number, date: string) {
         },
     });
 }
+
+const expandedEmployeeId = ref<number | null>(null);
+
+function toggleEmployee(id: number) {
+    expandedEmployeeId.value = expandedEmployeeId.value === id ? null : id;
+}
 </script>
 
 <template>
@@ -94,14 +111,28 @@ function submitManualTimeOut(checkinId: number, date: string) {
                 >
                     <div class="flex items-center gap-2">
                         <CalendarCheck class="h-5 w-5" />
-                        <CardTitle>Daily Attendance</CardTitle>
+                        <CardTitle>Attendance</CardTitle>
                     </div>
-                    <Input
-                        type="date"
-                        :value="props.date"
-                        class="max-w-[200px]"
-                        @change="onDateChange"
-                    />
+                    <!-- Period Navigator -->
+                    <div class="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            @click="goToPeriod(props.previousPeriod.start)"
+                        >
+                            <ChevronLeft class="h-4 w-4" />
+                        </Button>
+                        <span class="min-w-[220px] text-center text-sm font-medium">
+                            {{ props.period.label }}
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            @click="goToPeriod(props.nextPeriod.start)"
+                        >
+                            <ChevronRight class="h-4 w-4" />
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -110,122 +141,135 @@ function submitManualTimeOut(checkinId: number, date: string) {
                                 <TableHead>ID Number</TableHead>
                                 <TableHead>Employee</TableHead>
                                 <TableHead>Department</TableHead>
-                                <TableHead>Time In</TableHead>
-                                <TableHead>Time Out</TableHead>
-                                <TableHead class="text-right">
-                                    Hours
-                                </TableHead>
-                                <TableHead>Status</TableHead>
+                                <TableHead class="text-right">Days Present</TableHead>
+                                <TableHead class="text-right">Total Hours</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow
-                                v-for="record in props.attendance"
-                                :key="record.employee.id"
+                            <template
+                                v-for="item in props.attendance"
+                                :key="item.employee.id"
                             >
-                                <TableCell>
-                                    {{ record.employee.id_number }}
-                                </TableCell>
-                                <TableCell class="font-medium">
-                                    {{ record.employee.full_name }}
-                                </TableCell>
-                                <TableCell>
-                                    {{ record.employee.department ?? '—' }}
-                                </TableCell>
-                                <TableCell>
-                                    <template v-if="record.time_in">
-                                        <a
-                                            v-if="record.selfie_in_url"
-                                            :href="record.selfie_in_url"
-                                            target="_blank"
-                                            class="text-primary hover:underline"
-                                        >
-                                            {{ record.time_in }}
-                                        </a>
-                                        <span v-else>{{ record.time_in }}</span>
-                                    </template>
-                                    <span v-else>—</span>
-                                </TableCell>
-                                <TableCell>
-                                    <template v-if="record.time_out">
-                                        <a
-                                            v-if="record.selfie_out_url"
-                                            :href="record.selfie_out_url"
-                                            target="_blank"
-                                            class="text-primary hover:underline"
-                                        >
-                                            {{ record.time_out }}
-                                        </a>
-                                        <span v-else>{{ record.time_out }}</span>
-                                        <Badge v-if="record.time_out_next_day" variant="outline" class="ml-1 text-xs">
-                                            +1d
-                                        </Badge>
-                                        <Badge v-if="record.manual_time_out" variant="outline" class="ml-1 text-xs">
-                                            manual
-                                        </Badge>
-                                    </template>
-                                    <template v-else-if="record.time_in && !record.time_out">
-                                        <!-- Missing time-out: show manual entry -->
-                                        <div v-if="editingCheckinId === record.checkin_id" class="flex items-center gap-1">
-                                            <Input
-                                                v-model="manualTimeOutInput"
-                                                type="time"
-                                                step="1"
-                                                class="h-7 w-28 text-xs"
-                                            />
-                                            <Button
-                                                size="sm"
-                                                class="h-7 px-2 text-xs"
-                                                :disabled="!manualTimeOutInput"
-                                                @click="submitManualTimeOut(record.checkin_id!, record.date)"
-                                            >
-                                                Save
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                class="h-7 px-2 text-xs"
-                                                @click="cancelEdit"
-                                            >
-                                                ✕
-                                            </Button>
-                                        </div>
-                                        <Button
-                                            v-else
-                                            size="sm"
-                                            variant="outline"
-                                            class="h-7 px-2 text-xs"
-                                            @click="startEditManualTimeOut(record.checkin_id!)"
-                                        >
-                                            <Clock class="mr-1 h-3 w-3" />
-                                            Set time-out
-                                        </Button>
-                                    </template>
-                                    <span v-else>—</span>
-                                </TableCell>
-                                <TableCell class="text-right">
-                                    {{
-                                        record.total_hours !== null
-                                            ? `${record.total_hours}h`
-                                            : '—'
-                                    }}
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        :variant="
-                                            record.time_in
-                                                ? 'default'
-                                                : 'secondary'
-                                        "
-                                    >
-                                        {{
-                                            record.time_in
-                                                ? 'Present'
-                                                : 'Absent'
-                                        }}
-                                    </Badge>
-                                </TableCell>
-                            </TableRow>
+                                <TableRow
+                                    class="cursor-pointer hover:bg-muted/50"
+                                    @click="toggleEmployee(item.employee.id)"
+                                >
+                                    <TableCell>
+                                        {{ item.employee.id_number }}
+                                    </TableCell>
+                                    <TableCell class="font-medium">
+                                        {{ item.employee.full_name }}
+                                    </TableCell>
+                                    <TableCell>
+                                        {{ item.employee.department ?? '—' }}
+                                    </TableCell>
+                                    <TableCell class="text-right">
+                                        {{ item.days_present }}
+                                    </TableCell>
+                                    <TableCell class="text-right">
+                                        {{ item.total_hours > 0 ? `${item.total_hours}h` : '—' }}
+                                    </TableCell>
+                                </TableRow>
+                                <!-- Expanded daily records -->
+                                <TableRow v-if="expandedEmployeeId === item.employee.id">
+                                    <TableCell :colspan="5" class="bg-muted/30 p-0">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead class="pl-8">Date</TableHead>
+                                                    <TableHead>Time In</TableHead>
+                                                    <TableHead>Time Out</TableHead>
+                                                    <TableHead class="text-right">Hours</TableHead>
+                                                    <TableHead>Status</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                <TableRow
+                                                    v-for="record in item.records"
+                                                    :key="record.date"
+                                                >
+                                                    <TableCell class="pl-8 font-medium">
+                                                        {{ record.date }}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {{ record.time_in ?? '—' }}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <template v-if="record.time_out">
+                                                            {{ record.time_out }}
+                                                            <Badge v-if="record.time_out_next_day" variant="outline" class="ml-1 text-xs">
+                                                                +1d
+                                                            </Badge>
+                                                            <Badge v-if="record.manual_time_out" variant="outline" class="ml-1 text-xs">
+                                                                manual
+                                                            </Badge>
+                                                        </template>
+                                                        <template v-else-if="record.time_in && !record.time_out">
+                                                            <div v-if="editingCheckinId === record.checkin_id" class="flex items-center gap-1">
+                                                                <Input
+                                                                    v-model="manualTimeOutInput"
+                                                                    type="time"
+                                                                    step="1"
+                                                                    class="h-7 w-28 text-xs"
+                                                                />
+                                                                <Button
+                                                                    size="sm"
+                                                                    class="h-7 px-2 text-xs"
+                                                                    :disabled="!manualTimeOutInput"
+                                                                    @click="submitManualTimeOut(record.checkin_id!, record.date)"
+                                                                >
+                                                                    Save
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    class="h-7 px-2 text-xs"
+                                                                    @click="cancelEdit"
+                                                                >
+                                                                    ✕
+                                                                </Button>
+                                                            </div>
+                                                            <Button
+                                                                v-else
+                                                                size="sm"
+                                                                variant="outline"
+                                                                class="h-7 px-2 text-xs"
+                                                                @click.stop="startEditManualTimeOut(record.checkin_id!)"
+                                                            >
+                                                                <Clock class="mr-1 h-3 w-3" />
+                                                                Set time-out
+                                                            </Button>
+                                                        </template>
+                                                        <span v-else>—</span>
+                                                    </TableCell>
+                                                    <TableCell class="text-right">
+                                                        {{
+                                                            record.total_hours !== null
+                                                                ? `${record.total_hours}h`
+                                                                : '—'
+                                                        }}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            :variant="
+                                                                record.time_in
+                                                                    ? 'default'
+                                                                    : 'secondary'
+                                                            "
+                                                        >
+                                                            {{
+                                                                record.time_in
+                                                                    ? 'Present'
+                                                                    : 'Absent'
+                                                            }}
+                                                        </Badge>
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </TableCell>
+                                </TableRow>
+                            </template>
                         </TableBody>
                     </Table>
                 </CardContent>

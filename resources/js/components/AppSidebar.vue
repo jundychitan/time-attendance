@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import {
     BookOpen,
     Bug,
     CalendarCheck,
     FolderGit2,
     LayoutGrid,
+    ShieldCheck,
     Users,
 } from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
@@ -24,28 +26,43 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Employees',
-        href: '/employees',
-        icon: Users,
-    },
-    {
-        title: 'Attendance',
-        href: '/attendance',
-        icon: CalendarCheck,
-    },
-    {
-        title: 'API Debug Logs',
-        href: '/api-logs',
-        icon: Bug,
-    },
-];
+const page = usePage();
+const isSuperAdmin = computed(() => (page.props.auth as any)?.user?.is_super_admin);
+
+const mainNavItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Employees',
+            href: '/employees',
+            icon: Users,
+        },
+        {
+            title: 'Attendance',
+            href: '/attendance',
+            icon: CalendarCheck,
+        },
+        {
+            title: 'API Debug Logs',
+            href: '/api-logs',
+            icon: Bug,
+        },
+    ];
+
+    if (isSuperAdmin.value) {
+        items.push({
+            title: 'Admin Users',
+            href: '/admin-users',
+            icon: ShieldCheck,
+        });
+    }
+
+    return items;
+});
 
 const footerNavItems: NavItem[] = [
     {

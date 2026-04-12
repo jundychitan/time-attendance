@@ -198,6 +198,7 @@ it('uses manual_time_out when auto time-out is null', function () {
         'employee_id' => $employee->id,
         'captured_at' => "{$date} 20:00:00",
         'manual_time_out' => "{$date} 23:30:00",
+        'manual_time_out_status' => 'approved',
     ]);
 
     $attendance = $employee->attendanceForDate($date);

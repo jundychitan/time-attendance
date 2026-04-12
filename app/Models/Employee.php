@@ -211,11 +211,11 @@ class Employee extends Model
             $timeOutNextDay = true;
         }
 
-        // Fall back to manual_time_out if still no time-out
+        // Fall back to approved manual_time_out if still no time-out
         $totalHours = null;
         $timeOut = $last?->captured_at;
 
-        if ($first && ! $timeOut && $first->manual_time_out) {
+        if ($first && ! $timeOut && $first->manual_time_out && $first->manual_time_out_status === 'approved') {
             $timeOut = $first->manual_time_out;
         }
 
@@ -231,6 +231,7 @@ class Employee extends Model
             'total_hours' => $totalHours,
             'checkin_id' => $first?->id,
             'manual_time_out' => $first?->manual_time_out?->toTimeString(),
+            'manual_time_out_status' => $first?->manual_time_out_status,
         ];
     }
 

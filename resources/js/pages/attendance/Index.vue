@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { CalendarCheck, ChevronLeft, ChevronRight, Clock } from 'lucide-vue-next';
+import { CalendarCheck, Check, ChevronLeft, ChevronRight, Clock, X } from 'lucide-vue-next';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,7 @@ type DailyRecord = {
     total_hours: number | null;
     checkin_id: number | null;
     manual_time_out: string | null;
+    manual_time_out_status: string | null;
 };
 
 type EmployeeAttendance = {
@@ -91,6 +92,14 @@ function submitManualTimeOut(checkinId: number, date: string) {
             manualTimeOutInput.value = '';
         },
     });
+}
+
+function approveTimeOut(checkinId: number) {
+    router.patch(`/attendance/checkins/${checkinId}/approve`, {}, { preserveState: true });
+}
+
+function rejectTimeOut(checkinId: number) {
+    router.patch(`/attendance/checkins/${checkinId}/reject`, {}, { preserveState: true });
 }
 
 const expandedEmployeeId = ref<number | null>(null);
@@ -200,7 +209,7 @@ function toggleEmployee(id: number) {
                                                             <Badge v-if="record.time_out_next_day" variant="outline" class="ml-1 text-xs">
                                                                 +1d
                                                             </Badge>
-                                                            <Badge v-if="record.manual_time_out" variant="outline" class="ml-1 text-xs">
+                                                            <Badge v-if="record.manual_time_out_status === 'approved'" variant="outline" class="ml-1 text-xs">
                                                                 manual
                                                             </Badge>
                                                         </template>
@@ -250,19 +259,46 @@ function toggleEmployee(id: number) {
                                                         }}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge
-                                                            :variant="
-                                                                record.time_in
-                                                                    ? 'default'
-                                                                    : 'secondary'
-                                                            "
-                                                        >
-                                                            {{
-                                                                record.time_in
-                                                                    ? 'Present'
-                                                                    : 'Absent'
-                                                            }}
-                                                        </Badge>
+                                                        <div class="flex items-center gap-1">
+                                                            <Badge
+                                                                :variant="
+                                                                    record.time_in
+                                                                        ? 'default'
+                                                                        : 'secondary'
+                                                                "
+                                                            >
+                                                                {{
+                                                                    record.time_in
+                                                                        ? 'Present'
+                                                                        : 'Absent'
+                                                                }}
+                                                            </Badge>
+                                                            <!-- Pending approval -->
+                                                            <template v-if="record.manual_time_out_status === 'pending'">
+                                                                <Badge variant="outline" class="text-xs text-yellow-600">
+                                                                    pending
+                                                                </Badge>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    class="h-6 px-1.5"
+                                                                    @click.stop="approveTimeOut(record.checkin_id!)"
+                                                                >
+                                                                    <Check class="h-3 w-3 text-green-600" />
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    class="h-6 px-1.5"
+                                                                    @click.stop="rejectTimeOut(record.checkin_id!)"
+                                                                >
+                                                                    <X class="h-3 w-3 text-red-600" />
+                                                                </Button>
+                                                            </template>
+                                                            <Badge v-else-if="record.manual_time_out_status === 'rejected'" variant="destructive" class="text-xs">
+                                                                rejected
+                                                            </Badge>
+                                                        </div>
                                                     </TableCell>
                                                 </TableRow>
                                             </TableBody>

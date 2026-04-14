@@ -21,8 +21,10 @@ class EmployeePortalController extends Controller
 
         $records = $employee->attendanceForRange($period->start, $period->end);
 
-        $totalHours = collect($records)->sum('total_hours');
-        $daysPresent = collect($records)->whereNotNull('time_in')->count();
+        $recordsCollection = collect($records);
+        $totalRegular = $recordsCollection->sum('regular_hours');
+        $totalOT = $recordsCollection->sum('overtime_hours');
+        $daysPresent = $recordsCollection->whereNotNull('time_in')->count();
 
         return Inertia::render('my-attendance/Index', [
             'employee' => [
@@ -32,7 +34,8 @@ class EmployeePortalController extends Controller
                 'company' => $employee->company,
             ],
             'records' => $records,
-            'totalHours' => round($totalHours, 2),
+            'totalRegularHours' => round($totalRegular, 2),
+            'totalOvertimeHours' => round($totalOT, 2),
             'daysPresent' => $daysPresent,
             'period' => $period->toArray(),
             'previousPeriod' => $period->previous()->toArray(),

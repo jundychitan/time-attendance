@@ -27,6 +27,9 @@ type DailyRecord = {
     checkin_id: number | null;
     manual_time_out: string | null;
     manual_time_out_status: string | null;
+    regular_hours: number | null;
+    overtime_hours: number | null;
+    overtime_status: string | null;
 };
 
 type EmployeeAttendance = {
@@ -37,7 +40,8 @@ type EmployeeAttendance = {
         department: string | null;
     };
     records: DailyRecord[];
-    total_hours: number;
+    total_regular_hours: number;
+    total_overtime_hours: number;
     days_present: number;
 };
 
@@ -102,6 +106,14 @@ function rejectTimeOut(checkinId: number) {
     router.patch(`/attendance/checkins/${checkinId}/reject`, {}, { preserveState: true });
 }
 
+function approveOT(checkinId: number) {
+    router.patch(`/attendance/checkins/${checkinId}/approve-ot`, {}, { preserveState: true });
+}
+
+function rejectOT(checkinId: number) {
+    router.patch(`/attendance/checkins/${checkinId}/reject-ot`, {}, { preserveState: true });
+}
+
 const expandedEmployeeId = ref<number | null>(null);
 
 function toggleEmployee(id: number) {
@@ -150,8 +162,9 @@ function toggleEmployee(id: number) {
                                 <TableHead>ID Number</TableHead>
                                 <TableHead>Employee</TableHead>
                                 <TableHead>Department</TableHead>
-                                <TableHead class="text-right">Days Present</TableHead>
-                                <TableHead class="text-right">Total Hours</TableHead>
+                                <TableHead class="text-right">Days</TableHead>
+                                <TableHead class="text-right">Regular</TableHead>
+                                <TableHead class="text-right">OT</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -176,19 +189,23 @@ function toggleEmployee(id: number) {
                                         {{ item.days_present }}
                                     </TableCell>
                                     <TableCell class="text-right">
-                                        {{ item.total_hours > 0 ? `${item.total_hours}h` : '—' }}
+                                        {{ item.total_regular_hours > 0 ? `${item.total_regular_hours}h` : '—' }}
+                                    </TableCell>
+                                    <TableCell class="text-right">
+                                        {{ item.total_overtime_hours > 0 ? `${item.total_overtime_hours}h` : '—' }}
                                     </TableCell>
                                 </TableRow>
                                 <!-- Expanded daily records -->
                                 <TableRow v-if="expandedEmployeeId === item.employee.id">
-                                    <TableCell :colspan="5" class="bg-muted/30 p-0">
+                                    <TableCell :colspan="6" class="bg-muted/30 p-0">
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
                                                     <TableHead class="pl-8">Date</TableHead>
                                                     <TableHead>Time In</TableHead>
                                                     <TableHead>Time Out</TableHead>
-                                                    <TableHead class="text-right">Hours</TableHead>
+                                                    <TableHead class="text-right">Regular</TableHead>
+                                                    <TableHead class="text-right">OT</TableHead>
                                                     <TableHead>Status</TableHead>
                                                 </TableRow>
                                             </TableHeader>
@@ -273,10 +290,27 @@ function toggleEmployee(id: number) {
                                                     </TableCell>
                                                     <TableCell class="text-right">
                                                         {{
-                                                            record.total_hours !== null
-                                                                ? `${record.total_hours}h`
+                                                            record.regular_hours !== null
+                                                                ? `${record.regular_hours}h`
                                                                 : '—'
                                                         }}
+                                                    </TableCell>
+                                                    <TableCell class="text-right">
+                                                        <template v-if="record.overtime_hours">
+                                                            {{ record.overtime_hours }}h
+                                                            <Badge v-if="record.overtime_status === 'approved'" variant="outline" class="ml-1 text-xs text-green-600">approved</Badge>
+                                                            <Badge v-else-if="record.overtime_status === 'rejected'" variant="destructive" class="ml-1 text-xs">rejected</Badge>
+                                                            <template v-else>
+                                                                <Badge variant="outline" class="ml-1 text-xs text-yellow-600">pending</Badge>
+                                                                <Button size="sm" variant="outline" class="ml-1 h-5 px-1" @click.stop="approveOT(record.checkin_id!)">
+                                                                    <Check class="h-3 w-3 text-green-600" />
+                                                                </Button>
+                                                                <Button size="sm" variant="outline" class="h-5 px-1" @click.stop="rejectOT(record.checkin_id!)">
+                                                                    <X class="h-3 w-3 text-red-600" />
+                                                                </Button>
+                                                            </template>
+                                                        </template>
+                                                        <span v-else>—</span>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div class="flex items-center gap-1">

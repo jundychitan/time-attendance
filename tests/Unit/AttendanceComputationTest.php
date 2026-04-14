@@ -190,6 +190,78 @@ it('does not double-count consumed overnight checkout in range', function () {
         ->and($attendance[1]['time_out'])->toBeNull();
 });
 
+// Overtime calculation tests
+
+it('computes regular hours with break deducted', function () {
+    $employee = Employee::factory()->create();
+    $date = '2026-02-10';
+
+    // 9 hours total (08:00 - 17:00) -> 8h regular (9 - 1h break)
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 08:00:00"]);
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 17:00:00"]);
+
+    $attendance = $employee->attendanceForDate($date);
+
+    expect($attendance['regular_hours'])->toBe(8.0)
+        ->and($attendance['overtime_hours'])->toBeNull();
+});
+
+it('caps regular hours at 8h for shifts within buffer', function () {
+    $employee = Employee::factory()->create();
+    $date = '2026-02-10';
+
+    // 9.5 hours total (08:00 - 17:30) -> still 8h regular, no OT (within buffer)
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 08:00:00"]);
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 17:30:00"]);
+
+    $attendance = $employee->attendanceForDate($date);
+
+    expect($attendance['regular_hours'])->toBe(8.0)
+        ->and($attendance['overtime_hours'])->toBeNull();
+});
+
+it('returns no overtime within OT buffer (10h)', function () {
+    $employee = Employee::factory()->create();
+    $date = '2026-02-10';
+
+    // 10 hours total (08:00 - 18:00) -> 8h regular, no OT (within OT buffer)
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 08:00:00"]);
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 18:00:00"]);
+
+    $attendance = $employee->attendanceForDate($date);
+
+    expect($attendance['regular_hours'])->toBe(8.0)
+        ->and($attendance['overtime_hours'])->toBeNull();
+});
+
+it('calculates overtime beyond OT buffer threshold', function () {
+    $employee = Employee::factory()->create();
+    $date = '2026-02-10';
+
+    // 11 hours total (08:00 - 19:00) -> 8h regular, 1.5h OT (11 - 9.5)
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 08:00:00"]);
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 19:00:00"]);
+
+    $attendance = $employee->attendanceForDate($date);
+
+    expect($attendance['regular_hours'])->toBe(8.0)
+        ->and($attendance['overtime_hours'])->toBe(1.5);
+});
+
+it('computes regular hours for short shifts', function () {
+    $employee = Employee::factory()->create();
+    $date = '2026-02-10';
+
+    // 5 hours total (08:00 - 13:00) -> 4h regular (5 - 1h break)
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 08:00:00"]);
+    Checkin::factory()->create(['employee_id' => $employee->id, 'captured_at' => "{$date} 13:00:00"]);
+
+    $attendance = $employee->attendanceForDate($date);
+
+    expect($attendance['regular_hours'])->toBe(4.0)
+        ->and($attendance['overtime_hours'])->toBeNull();
+});
+
 it('uses manual_time_out when auto time-out is null', function () {
     $employee = Employee::factory()->create();
     $date = '2026-02-10';

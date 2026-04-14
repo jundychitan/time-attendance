@@ -42,6 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::patch('attendance/checkins/{checkin}/approve', [AttendanceController::class, 'approveManualTimeOut'])->name('attendance.approve');
     Route::patch('attendance/checkins/{checkin}/reject', [AttendanceController::class, 'rejectManualTimeOut'])->name('attendance.reject');
+    Route::patch('attendance/checkins/{checkin}/approve-ot', [AttendanceController::class, 'approveOvertime'])->name('attendance.approve-ot');
+    Route::patch('attendance/checkins/{checkin}/reject-ot', [AttendanceController::class, 'rejectOvertime'])->name('attendance.reject-ot');
 
     Route::get('api-logs', [ApiLogController::class, 'index'])->name('api-logs.index');
     }); // end admin middleware

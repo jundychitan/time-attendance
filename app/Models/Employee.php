@@ -223,12 +223,38 @@ class Employee extends Model
             $totalHours = round($first->captured_at->floatDiffInHours($timeOut), 2);
         }
 
+        // Calculate regular and overtime hours
+        $regularHours = null;
+        $overtimeHours = null;
+
+        if ($totalHours !== null) {
+            $breakHours = config('attendance.break_hours', 1);
+            $regularShift = config('attendance.regular_shift_hours', 9);
+            $regularBuffer = config('attendance.regular_buffer_minutes', 30) / 60;
+            $otBuffer = config('attendance.overtime_buffer_minutes', 30) / 60;
+
+            $regularThreshold = $regularShift + $regularBuffer; // 9.5h
+            $otThreshold = $regularThreshold + $otBuffer; // 10h
+            $maxRegularDisplay = $regularShift - $breakHours; // 8h
+
+            // Regular hours: total minus break, capped at max display
+            $regularHours = round(min(max($totalHours - $breakHours, 0), $maxRegularDisplay), 2);
+
+            // Overtime: only if beyond OT threshold
+            if ($totalHours > $otThreshold) {
+                $overtimeHours = round($totalHours - $regularThreshold, 2);
+            }
+        }
+
         return [
             'date' => $date->toDateString(),
             'time_in' => $first?->captured_at->toTimeString(),
             'time_out' => $timeOut?->toTimeString(),
             'time_out_next_day' => $timeOutNextDay,
             'total_hours' => $totalHours,
+            'regular_hours' => $regularHours,
+            'overtime_hours' => $overtimeHours,
+            'overtime_status' => $first?->overtime_status,
             'checkin_id' => $first?->id,
             'manual_time_out' => $first?->manual_time_out?->toTimeString(),
             'manual_time_out_status' => $first?->manual_time_out_status,

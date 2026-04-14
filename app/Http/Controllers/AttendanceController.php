@@ -32,7 +32,9 @@ class AttendanceController extends Controller
         $attendance = $employees->map(function (Employee $employee) use ($period) {
             $records = $employee->attendanceForRange($period->start, $period->end);
 
-            $totalHours = collect($records)->sum('total_hours');
+            $recordsCollection = collect($records);
+            $totalRegular = $recordsCollection->sum('regular_hours');
+            $totalOT = $recordsCollection->sum('overtime_hours');
 
             return [
                 'employee' => [
@@ -42,8 +44,9 @@ class AttendanceController extends Controller
                     'department' => $employee->department,
                 ],
                 'records' => $records,
-                'total_hours' => round($totalHours, 2),
-                'days_present' => collect($records)->whereNotNull('time_in')->count(),
+                'total_regular_hours' => round($totalRegular, 2),
+                'total_overtime_hours' => round($totalOT, 2),
+                'days_present' => $recordsCollection->whereNotNull('time_in')->count(),
             ];
         });
 
@@ -88,5 +91,25 @@ class AttendanceController extends Controller
         ]);
 
         return back()->with('success', 'Manual time-out rejected.');
+    }
+
+    public function approveOvertime(Checkin $checkin): RedirectResponse
+    {
+        $checkin->update([
+            'overtime_status' => 'approved',
+            'overtime_approved_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Overtime approved.');
+    }
+
+    public function rejectOvertime(Checkin $checkin): RedirectResponse
+    {
+        $checkin->update([
+            'overtime_status' => 'rejected',
+            'overtime_approved_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Overtime rejected.');
     }
 }

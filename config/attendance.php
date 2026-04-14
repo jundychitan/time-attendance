@@ -15,4 +15,15 @@ return [
 
     'cutoff_day' => (int) env('ATTENDANCE_CUTOFF_DAY', 15),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Overtime Rules
+    |--------------------------------------------------------------------------
+    */
+
+    'regular_shift_hours' => (int) env('ATTENDANCE_REGULAR_SHIFT_HOURS', 9),
+    'break_hours' => (float) env('ATTENDANCE_BREAK_HOURS', 1),
+    'regular_buffer_minutes' => (int) env('ATTENDANCE_REGULAR_BUFFER_MINUTES', 30),
+    'overtime_buffer_minutes' => (int) env('ATTENDANCE_OVERTIME_BUFFER_MINUTES', 30),
+
 ];

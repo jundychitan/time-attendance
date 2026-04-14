@@ -21,6 +21,9 @@ type DailyRecord = {
     checkin_id: number | null;
     manual_time_out: string | null;
     manual_time_out_status: string | null;
+    regular_hours: number | null;
+    overtime_hours: number | null;
+    overtime_status: string | null;
 };
 
 type Period = {
@@ -37,7 +40,8 @@ type Props = {
         company: string | null;
     };
     records: DailyRecord[];
-    totalHours: number;
+    totalRegularHours: number;
+    totalOvertimeHours: number;
     daysPresent: number;
     period: Period;
     previousPeriod: Period;
@@ -107,8 +111,12 @@ function submitManualTimeOut(checkinId: number, date: string) {
                                 <div class="text-muted-foreground text-xs">Days Present</div>
                             </div>
                             <div>
-                                <div class="text-2xl font-bold">{{ props.totalHours > 0 ? `${props.totalHours}h` : '—' }}</div>
-                                <div class="text-muted-foreground text-xs">Total Hours</div>
+                                <div class="text-2xl font-bold">{{ props.totalRegularHours > 0 ? `${props.totalRegularHours}h` : '—' }}</div>
+                                <div class="text-muted-foreground text-xs">Regular</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold">{{ props.totalOvertimeHours > 0 ? `${props.totalOvertimeHours}h` : '—' }}</div>
+                                <div class="text-muted-foreground text-xs">Overtime</div>
                             </div>
                         </div>
                     </div>
@@ -141,7 +149,8 @@ function submitManualTimeOut(checkinId: number, date: string) {
                                 <TableHead>Date</TableHead>
                                 <TableHead>Time In</TableHead>
                                 <TableHead>Time Out</TableHead>
-                                <TableHead class="text-right">Hours</TableHead>
+                                <TableHead class="text-right">Regular</TableHead>
+                                <TableHead class="text-right">OT</TableHead>
                                 <TableHead>Status</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -200,7 +209,16 @@ function submitManualTimeOut(checkinId: number, date: string) {
                                     <span v-else>—</span>
                                 </TableCell>
                                 <TableCell class="text-right">
-                                    {{ record.total_hours !== null ? `${record.total_hours}h` : '—' }}
+                                    {{ record.regular_hours !== null ? `${record.regular_hours}h` : '—' }}
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <template v-if="record.overtime_hours">
+                                        {{ record.overtime_hours }}h
+                                        <Badge v-if="record.overtime_status === 'approved'" variant="outline" class="ml-1 text-xs text-green-600">approved</Badge>
+                                        <Badge v-else-if="record.overtime_status === 'rejected'" variant="destructive" class="ml-1 text-xs">rejected</Badge>
+                                        <Badge v-else variant="outline" class="ml-1 text-xs text-yellow-600">pending</Badge>
+                                    </template>
+                                    <span v-else>—</span>
                                 </TableCell>
                                 <TableCell>
                                     <Badge :variant="record.time_in ? 'default' : 'secondary'">

@@ -21,6 +21,8 @@ class Checkin extends Model
         'manual_time_out',
         'manual_time_out_status',
         'approved_by',
+        'overtime_status',
+        'overtime_approved_by',
     ];
 
     /**

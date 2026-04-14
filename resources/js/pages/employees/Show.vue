@@ -195,7 +195,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <TableHead>Time In</TableHead>
                                 <TableHead>Time Out</TableHead>
                                 <TableHead class="text-right">
-                                    Hours
+                                    Regular
+                                </TableHead>
+                                <TableHead class="text-right">
+                                    OT
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
@@ -215,10 +218,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 </TableCell>
                                 <TableCell class="text-right">
                                     {{
-                                        record.total_hours !== null
-                                            ? `${record.total_hours}h`
+                                        record.regular_hours !== null
+                                            ? `${record.regular_hours}h`
                                             : '—'
                                     }}
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    {{ record.overtime_hours ? `${record.overtime_hours}h` : '—' }}
                                 </TableCell>
                             </TableRow>
                         </TableBody>
